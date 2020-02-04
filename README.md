@@ -15,8 +15,8 @@ Compile `m_murmur3.f90` and include it with `use m_murmur3`. Two hash functions 
     MurmurHash3_x64_128(key, len, seed, hash)
 
 The arguments are:
-* `key`: a pointer to the data you wish to hash
-* `len`: the length in bytes
+* `key`: string you wish to hash
+* `len`: the length of the string
 * `seed`: seed for the hash
 * `hash`: resulting hash
 
