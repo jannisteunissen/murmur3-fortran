@@ -1,10 +1,10 @@
 ! MurmurHash3 was written by Austin Appleby, and is placed in the public
 ! domain. The author hereby disclaims copyright to this source code.
-
-! Note - The x86 and x64 versions do _not_ produce the same results, as the
-! algorithms are optimized for their respective platforms. You can still
-! compile and run any of them on any platform, but your performance with the
-! non-native version will be less than optimal.
+!
+! Author: Jannis Teunissen
+!
+! Fortran port of the C port by Peter Scott, see
+! https://github.com/PeterScott/murmur3
 module m_murmur3
   use iso_fortran_env
 
@@ -16,20 +16,20 @@ module m_murmur3
 
 contains
 
-  pure integer(int32) function rotl32 (x, r)
+  pure integer(int32) function rotl32(x, r)
     integer(int32), intent(in) :: x
     integer(int8), intent(in)  :: r
     rotl32 = ior(shiftl(x, r), shiftr(x, (32 - r)))
   end function rotl32
 
-  pure integer(int64) function rotl64 (x, r)
+  pure integer(int64) function rotl64(x, r)
     integer(int64), intent(in) :: x
     integer(int8), intent(in)  :: r
     rotl64 = ior(shiftl(x, r), shiftr(x, (64 - r)))
   end function rotl64
 
   ! Finalization mix - force all bits of a hash block to avalanche
-  pure integer(int32) function fmix32 (h_in) result(h)
+  pure integer(int32) function fmix32(h_in) result(h)
     integer(int32), intent(in) :: h_in
     h = h_in
     h = ieor(h, shiftr(h, 16))
@@ -39,7 +39,7 @@ contains
     h = ieor(h, shiftr(h, 16))
   end function fmix32
 
-  integer(int64) function fmix64 (k_in) result(k)
+  integer(int64) function fmix64(k_in) result(k)
     integer(int64), intent(in) :: k_in
     k = k_in
     k = ieor(k, shiftr(k, 33))
@@ -54,7 +54,7 @@ contains
     character(len=len), intent(in) :: key
     integer(int32), intent(in)     :: seed
     integer(int32), intent(out)    :: hash
-    integer(int8)                  :: data(len)
+    integer(int8)                  :: idata(len)
     integer                        :: i, i0, n, nblocks
     integer(int32)                 :: h1, k1
     integer(int32), parameter      :: c1 = -862048943 ! 0xcc9e2d51
@@ -62,12 +62,12 @@ contains
     integer, parameter             :: shifts(3) = [0, 8, 16]
 
     h1      = seed
-    nblocks = shiftr(len, 2)
-    data    = transfer(key, data)
+    nblocks = shiftr(len, 2)    ! nblocks/4
+    idata   = transfer(key, idata)
 
     ! body
     do i = 1, nblocks
-       k1 = transfer(data(i*4-3:i*4), k1)
+       k1 = transfer(idata(i*4-3:i*4), k1)
 
        k1 = k1 * c1
        k1 = rotl32(k1,15_int8)
@@ -85,9 +85,10 @@ contains
     i0 = 4 * nblocks
 
     do n = i, 1, -1
-       k1 = ieor(k1, shiftl(int(data(i0 + n), int32), shifts(n)))
+       k1 = ieor(k1, shiftl(int(idata(i0 + n), int32), shifts(n)))
     end do
 
+    ! Check if the above loop was executed
     if (i >= 1) then
        k1 = k1 * c1
        k1 = rotl32(k1,15_int8)
@@ -106,7 +107,7 @@ contains
     character(len=len), intent(in) :: key
     integer(int32), intent(in)     :: seed
     integer(int32), intent(out)    :: hash(4)
-    integer(int8)                  :: data(len)
+    integer(int8)                  :: idata(len)
     integer                        :: i, i0, n, nblocks
     integer(int64)                 :: h1, h2, k1, k2
     ! 0x87c37b91114253d5
@@ -117,13 +118,13 @@ contains
 
     h1      = seed
     h2      = seed
-    nblocks = shiftr(len, 4)
-    data    = transfer(key, data)
+    nblocks = shiftr(len, 4)    ! nblocks / 16
+    idata   = transfer(key, idata)
 
     ! body
     do i = 1, nblocks
-       k1 = transfer(data(i*16-15:i*16-8), k1)
-       k2 = transfer(data(i*16-7:i*16), k2)
+       k1 = transfer(idata(i*16-15:i*16-8), k1)
+       k2 = transfer(idata(i*16-7:i*16), k2)
 
        k1 = k1 * c1
        k1 = rotl64(k1,31_int8)
@@ -151,9 +152,10 @@ contains
     i = iand(len, 15)
     i0 = 16 * nblocks
     do n = i, 9, -1
-       k2 = ieor(k2, shiftl(int(data(i0 + n), int64), shifts(n)))
+       k2 = ieor(k2, shiftl(int(idata(i0 + n), int64), shifts(n)))
     end do
 
+    ! Check if the above loop was executed
     if (i >= 9) then
        k2 = k2 * c2
        k2  = rotl64(k2,33_int8)
@@ -162,9 +164,10 @@ contains
     end if
 
     do n = min(i, 8), 1, -1
-       k1 = ieor(k1, shiftl(int(data(i0 + n), int64), shifts(n)))
+       k1 = ieor(k1, shiftl(int(idata(i0 + n), int64), shifts(n)))
     end do
 
+    ! Check if the above loop was executed
     if (i >= 1) then
        k1 = k1 * c1
        k1 = rotl64(k1,31_int8)
