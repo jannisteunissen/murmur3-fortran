@@ -6,10 +6,12 @@ This is a Fortran port of the [Murmur3](http://code.google.com/p/smhasher/wiki/M
 Usage
 -----------
 
-Compile `m_murmur3.f90` and include it with `use m_murmur3`. There are three hash functions:
+Compile `m_murmur3.f90` and include it with `use m_murmur3`. Two hash functions are included: 
 
+    # 32 bit hash, low throughput, low latency (good for short small keys)
     MurmurHash3_x86_32 (key, len, seed, hash)
-    MurmurHash3_x86_128(key, len, seed, hash)
+
+    # 128 bit hash, 250% higher throughput, similar latency
     MurmurHash3_x64_128(key, len, seed, hash)
 
 The arguments are:
@@ -18,13 +20,7 @@ The arguments are:
 * `seed`: seed for the hash
 * `hash`: resulting hash
 
-The hash functions differ in both their internal mechanisms and in their outputs, as documented at https://github.com/PeterScott/murmur3
-
-**MurmurHash3_x86_32** 32 bit hash, low throughput, low latency (good for short small keys)
-
-**MurmurHash3_x86_128** 128 bit hash, 30% higher throughput, 86% lower latency
-
-**MurmurHash3_x64_128** 128 bit hash, 250% higher throughput, similar latency
+`MurmurHash3_x86_128` has been omitted, since it is only useful on older x86 hardware. 
 
 License and contributing
 --------------------
