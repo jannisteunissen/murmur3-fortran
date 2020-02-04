@@ -39,7 +39,7 @@ contains
     h = ieor(h, shiftr(h, 16))
   end function fmix32
 
-  integer(int64) function fmix64(k_in) result(k)
+  pure integer(int64) function fmix64(k_in) result(k)
     integer(int64), intent(in) :: k_in
     k = k_in
     k = ieor(k, shiftr(k, 33))
@@ -49,7 +49,7 @@ contains
     k = ieor(k, shiftr(k, 33))
   end function fmix64
 
-  subroutine MurmurHash3_x86_32(key, len, seed, hash)
+  pure subroutine MurmurHash3_x86_32(key, len, seed, hash)
     integer, intent(in)            :: len
     character(len=len), intent(in) :: key
     integer(int32), intent(in)     :: seed
@@ -102,7 +102,7 @@ contains
     hash = h1
   end subroutine MurmurHash3_x86_32
 
-  subroutine MurmurHash3_x64_128(key, len, seed, hash)
+  pure subroutine MurmurHash3_x64_128(key, len, seed, hash)
     integer, intent(in)            :: len
     character(len=len), intent(in) :: key
     integer(int32), intent(in)     :: seed
