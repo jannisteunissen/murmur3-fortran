@@ -49,20 +49,20 @@ contains
     k = ieor(k, shiftr(k, 33))
   end function fmix64
 
-  pure subroutine MurmurHash3_x86_32(key, len, seed, hash)
-    integer, intent(in)            :: len
-    character(len=len), intent(in) :: key
-    integer(int32), intent(in)     :: seed
-    integer(int32), intent(out)    :: hash
-    integer(int8)                  :: idata(len)
-    integer                        :: i, i0, n, nblocks
-    integer(int32)                 :: h1, k1
-    integer(int32), parameter      :: c1 = -862048943 ! 0xcc9e2d51
-    integer(int32), parameter      :: c2 = 461845907  !0x1b873593
-    integer, parameter             :: shifts(3) = [0, 8, 16]
+  pure subroutine MurmurHash3_x86_32(key, klen, seed, hash)
+    integer, intent(in)             :: klen
+    character(len=klen), intent(in) :: key
+    integer(int32), intent(in)      :: seed
+    integer(int32), intent(out)     :: hash
+    integer(int8)                   :: idata(klen)
+    integer                         :: i, i0, n, nblocks
+    integer(int32)                  :: h1, k1
+    integer(int32), parameter       :: c1        = -862048943 ! 0xcc9e2d51
+    integer(int32), parameter       :: c2        = 461845907  !0x1b873593
+    integer, parameter              :: shifts(3) = [0, 8, 16]
 
     h1      = seed
-    nblocks = shiftr(len, 2)    ! nblocks/4
+    nblocks = shiftr(klen, 2)    ! nblocks/4
     idata   = transfer(key, idata)
 
     ! body
@@ -80,8 +80,7 @@ contains
 
     ! tail
     k1 = 0
-
-    i = iand(len, 3)
+    i  = iand(klen, 3)
     i0 = 4 * nblocks
 
     do n = i, 1, -1
@@ -97,28 +96,28 @@ contains
     end if
 
     ! finalization
-    h1 = ieor(h1, len)
+    h1 = ieor(h1, klen)
     h1 = fmix32(h1)
     hash = h1
   end subroutine MurmurHash3_x86_32
 
-  pure subroutine MurmurHash3_x64_128(key, len, seed, hash)
-    integer, intent(in)            :: len
-    character(len=len), intent(in) :: key
-    integer(int32), intent(in)     :: seed
-    integer(int32), intent(out)    :: hash(4)
-    integer(int8)                  :: idata(len)
-    integer                        :: i, i0, n, nblocks
-    integer(int64)                 :: h1, h2, k1, k2
+  pure subroutine MurmurHash3_x64_128(key, klen, seed, hash)
+    integer, intent(in)             :: klen
+    character(len=klen), intent(in) :: key
+    integer(int32), intent(in)      :: seed
+    integer(int32), intent(out)     :: hash(4)
+    integer(int8)                   :: idata(klen)
+    integer                         :: i, i0, n, nblocks
+    integer(int64)                  :: h1, h2, k1, k2
     ! 0x87c37b91114253d5
-    integer(int64), parameter      :: c1         = -8663945395140668459_int64
+    integer(int64), parameter       :: c1         = -8663945395140668459_int64
     ! 0x4cf5ad432745937f
-    integer(int64), parameter      :: c2         = 5545529020109919103_int64
-    integer, parameter             :: shifts(15) = [(i*8, i=0,7), (i*8, i=0,6)]
+    integer(int64), parameter       :: c2         = 5545529020109919103_int64
+    integer, parameter              :: shifts(15) = [(i*8, i=0,7), (i*8, i=0,6)]
 
     h1      = seed
     h2      = seed
-    nblocks = shiftr(len, 4)    ! nblocks / 16
+    nblocks = shiftr(klen, 4)    ! nblocks / 16
     idata   = transfer(key, idata)
 
     ! body
@@ -148,9 +147,9 @@ contains
     ! tail
     k1 = 0
     k2 = 0
-
-    i = iand(len, 15)
+    i  = iand(klen, 15)
     i0 = 16 * nblocks
+
     do n = i, 9, -1
        k2 = ieor(k2, shiftl(int(idata(i0 + n), int64), shifts(n)))
     end do
@@ -176,8 +175,8 @@ contains
     end if
 
     ! finalization
-    h1 = ieor(h1, int(len, int64))
-    h2 = ieor(h2, int(len, int64))
+    h1 = ieor(h1, int(klen, int64))
+    h2 = ieor(h2, int(klen, int64))
 
     h1 = h1 + h2
     h2 = h2 + h1
