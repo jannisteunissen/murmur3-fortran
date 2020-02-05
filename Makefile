@@ -2,7 +2,7 @@
 
 FC := gfortran
 FFLAGS := -O3 -Wall
-PROGS := example testhash
+PROGS := example testhash benchmark
 
 all: $(PROGS)
 
