@@ -11,7 +11,7 @@ Compile `m_murmur3.f90` and include it with `use m_murmur3`. Two hash functions 
     # 32 bit hash, low throughput, low latency (good for short small keys)
     MurmurHash3_x86_32 (key, klen, seed, hash)
 
-    # 128 bit hash, 250% higher throughput, similar latency
+    # 128 bit hash, 250% higher throughput, similar latency (good for long keys)
     MurmurHash3_x64_128(key, klen, seed, hash)
 
 The arguments are:

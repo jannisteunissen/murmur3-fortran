@@ -4,20 +4,24 @@ program benchmark
 
   implicit none
 
-  character(len=100) :: string
-  integer            :: n, hash_32, hash_128(4)
-  real(real64)       :: t0, t1
-  integer, parameter :: n_max = 10*1000*1000
+  character(len=2**15) :: string
+  integer              :: n, length, hash_32, hash_128(4)
+  real(real64)         :: t0, t1
+  integer, parameter   :: n_max = 10*1000*1000
 
   if (command_argument_count() /= 1) &
        stop "Give string as argument"
-
   call get_command_argument(1, string)
-  write(*, "(A)") 'Input: "' // trim(string) // '"'
+
+  length = len_trim(string)
+  write(*, "(A,I0)") 'Input length: ', length
+
+  if (length == len(string)) &
+       stop "Input truncated, increase maximum length"
 
   call cpu_time(t0)
   do n = 1, n_max
-     call MurmurHash3_x86_32(string, len_trim(string), 42, hash_32)
+     call MurmurHash3_x86_32(string, length, 42, hash_32)
   end do
   call cpu_time(t1)
   write(*, "(A,Z9,E12.4,A)") "x86_32: ", hash_32, &
@@ -25,7 +29,7 @@ program benchmark
 
   call cpu_time(t0)
   do n = 1, n_max
-     call MurmurHash3_x64_128(string, len_trim(string), 42, hash_128)
+     call MurmurHash3_x64_128(string, length, 42, hash_128)
   end do
   call cpu_time(t1)
   write(*, "(A,4Z9,E12.4,A)") "x64_128:", hash_128, &
