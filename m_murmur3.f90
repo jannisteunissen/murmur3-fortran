@@ -11,8 +11,20 @@ module m_murmur3
   implicit none
   private
 
+  ! Generic interface for MurmurHash3_x86_32
+  interface MurmurHash3_x86_32
+     module procedure MurmurHash3_x86_32_string, MurmurHash3_x86_32_char
+  end interface MurmurHash3_x86_32
+
+  ! Generic interface for MurmurHash3_x64_128
+  interface MurmurHash3_x64_128
+     module procedure MurmurHash3_x64_128_string, MurmurHash3_x64_128_char
+  end interface MurmurHash3_x64_128
+
   public :: MurmurHash3_x86_32
+  public :: MurmurHash3_x86_32_string, MurmurHash3_x86_32_char
   public :: MurmurHash3_x64_128
+  public :: MurmurHash3_x64_128_string, MurmurHash3_x64_128_char
 
 contains
 
@@ -49,12 +61,20 @@ contains
     k = ieor(k, shiftr(k, 33))
   end function fmix64
 
-  pure subroutine MurmurHash3_x86_32(key, klen, seed, hash)
+  pure subroutine MurmurHash3_x86_32_char(key, klen, seed, hash)
+    integer, intent(in)         :: klen
+    character, intent(in)       :: key(klen)
+    integer(int32), intent(in)  :: seed
+    integer(int32), intent(out) :: hash
+    character(len=klen)         :: buf
+    call MurmurHash3_x86_32_string(transfer(key, buf), klen, seed, hash)
+  end subroutine MurmurHash3_x86_32_char
+
+  pure subroutine MurmurHash3_x86_32_string(key, klen, seed, hash)
     integer, intent(in)             :: klen
     character(len=klen), intent(in) :: key
     integer(int32), intent(in)      :: seed
     integer(int32), intent(out)     :: hash
-    integer(int8)                   :: idata(klen)
     integer                         :: i, i0, n, nblocks
     integer(int32)                  :: h1, k1
     integer(int32), parameter       :: c1        = -862048943 ! 0xcc9e2d51
@@ -63,11 +83,10 @@ contains
 
     h1      = seed
     nblocks = shiftr(klen, 2)    ! nblocks/4
-    idata   = transfer(key, idata)
 
     ! body
     do i = 1, nblocks
-       k1 = transfer(idata(i*4-3:i*4), k1)
+       k1 = transfer(key(i*4-3:i*4), k1)
 
        k1 = k1 * c1
        k1 = rotl32(k1,15_int8)
@@ -84,7 +103,7 @@ contains
     i0 = 4 * nblocks
 
     do n = i, 1, -1
-       k1 = ieor(k1, shiftl(int(idata(i0 + n), int32), shifts(n)))
+       k1 = ieor(k1, shiftl(iachar(key(i0+n:i0+n)), shifts(n)))
     end do
 
     ! Check if the above loop was executed
@@ -99,14 +118,22 @@ contains
     h1 = ieor(h1, klen)
     h1 = fmix32(h1)
     hash = h1
-  end subroutine MurmurHash3_x86_32
+  end subroutine MurmurHash3_x86_32_string
 
-  pure subroutine MurmurHash3_x64_128(key, klen, seed, hash)
+  pure subroutine MurmurHash3_x64_128_char(key, klen, seed, hash)
+    integer, intent(in)         :: klen
+    character, intent(in)       :: key(klen)
+    integer(int32), intent(in)  :: seed
+    integer(int32), intent(out) :: hash(4)
+    character(len=klen)         :: buf
+    call MurmurHash3_x64_128_string(transfer(key, buf), klen, seed, hash)
+  end subroutine MurmurHash3_x64_128_char
+
+  pure subroutine MurmurHash3_x64_128_string(key, klen, seed, hash)
     integer, intent(in)             :: klen
     character(len=klen), intent(in) :: key
     integer(int32), intent(in)      :: seed
     integer(int32), intent(out)     :: hash(4)
-    integer(int8)                   :: idata(klen)
     integer                         :: i, i0, n, nblocks
     integer(int64)                  :: h1, h2, k1, k2
     ! 0x87c37b91114253d5
@@ -118,12 +145,11 @@ contains
     h1      = seed
     h2      = seed
     nblocks = shiftr(klen, 4)    ! nblocks / 16
-    idata   = transfer(key, idata)
 
     ! body
     do i = 1, nblocks
-       k1 = transfer(idata(i*16-15:i*16-8), k1)
-       k2 = transfer(idata(i*16-7:i*16), k2)
+       k1 = transfer(key(i*16-15:i*16-8), k1)
+       k2 = transfer(key(i*16-7:i*16), k2)
 
        k1 = k1 * c1
        k1 = rotl64(k1,31_int8)
@@ -151,7 +177,7 @@ contains
     i0 = 16 * nblocks
 
     do n = i, 9, -1
-       k2 = ieor(k2, shiftl(int(idata(i0 + n), int64), shifts(n)))
+       k2 = ieor(k2, shiftl(iachar(key(i0+n:i0+n), int64), shifts(n)))
     end do
 
     ! Check if the above loop was executed
@@ -163,7 +189,7 @@ contains
     end if
 
     do n = min(i, 8), 1, -1
-       k1 = ieor(k1, shiftl(int(idata(i0 + n), int64), shifts(n)))
+       k1 = ieor(k1, shiftl(iachar(key(i0+n:i0+n), int64), shifts(n)))
     end do
 
     ! Check if the above loop was executed
@@ -188,6 +214,6 @@ contains
     h2 = h2 + h1
 
     hash = transfer([h1, h2], hash)
-  end subroutine MurmurHash3_x64_128
+  end subroutine MurmurHash3_x64_128_string
 
 end module m_murmur3

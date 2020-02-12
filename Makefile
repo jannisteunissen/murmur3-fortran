@@ -1,4 +1,4 @@
-.phony: all clean
+.phony: all clean test
 
 FC := gfortran
 FFLAGS := -O3 -Wall
@@ -8,6 +8,9 @@ all: $(PROGS)
 
 clean:
 	$(RM) $(PROGS) *.o *.mod
+
+test: testhash
+	./testhash
 
 # Compilation rules
 %: %.f90
