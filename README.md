@@ -22,6 +22,12 @@ The arguments are:
 
 `MurmurHash3_x86_128` has been omitted, since it is only useful on older x86 hardware.
 
+Links
+-------------
+
+* [ffhash](https://github.com/jannisteunissen/ffhash) Fast Fortran Hash table
+* [Hash tables on Fortran Wiki](http://fortranwiki.org/fortran/show/Hash+tables)
+
 License and contributing
 --------------------
 
